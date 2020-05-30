@@ -1,0 +1,67 @@
+    // Reference: If using open-close comparisons instead of close-lastCandle close comparisons
+    // * Advantage - simplier
+    // * Disadvantage - AlphaVantage open-close gaps are relatively large (should they be?)
+    
+    
+    // Last Trading day strategy: 
+    // Compare the price increase (Open->Close) on the last trading day's candle with the same time
+    populateLastTdTimeOfDayEstimate(candles, candle) {
+
+
+        // Find all candles matching this candle's time (hh:mm)
+        let lastTdCandles = this.findMatchingTimeCandles(candles, candle.date);
+
+        // No data
+        if (lastTdCandles.length === 0) {
+            candle.estCloseDetailslastTd = 'No data';
+            return;            
+        }
+        
+        let lastTdCandle = lastTdCandles[0];
+        let priceDifference = 0;
+
+        // If this candle is not a future candle, (it has an open/close value)
+        // * priceDifference: Open minus close from the last TD 
+        // * estimate: Open minus priceDifference from the current candle
+        if (!candle.futureCandle) {
+
+            priceDifference = (lastTdCandle.open - lastTdCandle.close).toFixed(2);
+            candle.estCloseLastTd = (candle.open - priceDifference).toFixed(2);
+            
+            if (candle.dateString === '5/22' && candle.timeString === '03:00') {
+                console.log(priceDifference);
+                console.log(candle.estCloseLastTd);
+            }
+            
+            candle.estCloseDetailsLastTd = `${candle.dateString} ${candle.timeString}: $${candle.open} (open)`;
+            candle.estCloseDetailsLastTd2 = `${lastTdCandle.dateString} ${lastTdCandle.timeString}: $${lastTdCandle.open} - $${lastTdCandle.close}`;
+            candle.estCloseDetailsLastTd3 = `Diff: $${priceDifference * -1}`;
+        }
+
+        // Future candle doesn't have open/close data. Find the most recent candle this trading day that's not a future candle
+        // * priceDifference: Close minus close (last TD time that has a non-future candle from today)
+        // * estimate: 
+        else {
+            let fullCandle = candles.find(x => x.dateString === candle.dateString); // Get the first non-future candle today
+            let lastTdPresentCandles = this.findMatchingTimeCandles(candles, moment(fullCandle.date)); // Corresponding candle yesterday
+            
+            if (lastTdPresentCandles.length > 0) {         
+                let lastTdPresentCandle = lastTdPresentCandles[0];      
+
+                priceDifference = (lastTdPresentCandle.close - lastTdCandle.close).toFixed(2);
+                candle.estCloseLastTd = (fullCandle.close - priceDifference).toFixed(2);
+                
+                candle.estCloseDetailsLastTd = `${fullCandle.dateString} ${fullCandle.timeString}: $${fullCandle.close} (close)`;
+                candle.estCloseDetailsLastTd2 =`${lastTdCandle.dateString} ${lastTdPresentCandle.timeString} - ${lastTdCandle.timeString}: 
+                                                $${lastTdCandle.close} - $${lastTdPresentCandle.close} (close)`;
+                candle.estCloseDetailsLastTd3 = `Diff: $${priceDifference * -1}`;
+            }
+        }
+
+        // If this close already happened, get how accurate this candle was
+        if (candle.close) {
+            candle.estCloseAccuracyLastTdResult = (candle.close - candle.estCloseLastTd).toFixed(2);
+            candle.estCloseAccuracyLastTdWide = (Math.abs(candle.estCloseAccuracyLastTdResult) <= .5) ? true: false;
+            candle.estCloseAccuracyLastTdNarrow = (Math.abs(candle.estCloseAccuracyLastTdResult) <= .25) ? true: false;
+        }
+    }
