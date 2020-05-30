@@ -18,7 +18,7 @@ class Stock extends React.Component {
             displayedCandles: [],
             
             // Days back
-            days: 1,
+            days: 3,
 
             // Visibility
             showOpen: true,
