@@ -9,7 +9,6 @@ import {fetchStock} from './CandleApi';
 class Stock extends React.Component {
 
     intervalID;
-    minutesAhead; //TODO: Make minutes ahead configurable
     
     constructor(props) {
         super(props);
@@ -20,7 +19,7 @@ class Stock extends React.Component {
             // How many days back of candles to show
             days: 3,
             // How many minutes ahead to forecast
-            minutesAhead: 30,
+            minutesAhead: 15,
 
             // Visibility
             showOpen: true,
@@ -98,8 +97,6 @@ class Stock extends React.Component {
         let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
         let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
 
-        console.log(forecastRange.format('MM/DD HH:mm'));
-
         // * Debug: Day backtracking *
         // currentTradingDay.subtract(3, 'days');
         // forecastRange.subtract(3, 'days');
@@ -150,7 +147,6 @@ class Stock extends React.Component {
     render() {
 
         // Container/Table bootstrap classes
-        const containerClass = 'container-fluid';
         const rowClass = 'row';
         const colClass = 'col-sm-12 col-lg-10 offset-lg-1';
         const tableClass = 'table table-striped';
@@ -187,26 +183,8 @@ class Stock extends React.Component {
 
 
         return (
-            <div className={containerClass}>
+            <div>
                 
-                {/* Visibility */}
-                <div className={rowClass}>
-                    <div className={colClass}>
-                        <div className={btnGroup}>
-                            <button className={this.state.showOverallAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOverallAvg: !this.state.showOverallAvg })}>Overall Avg</button>
-                            <button className={this.state.showLastTd ? btnSuccess : btnSecondary } onClick={() => this.setState({ showLastTd: !this.state.showLastTd })}>Last TD</button>
-                            <button className={this.state.showAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showAvg: !this.state.showAvg })}>Average</button>
-                            <button className={this.state.showDowAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showDowAvg: !this.state.showDowAvg })}>Day of week Avg</button>
-                        </div>
-                        <div className={btnGroup}>
-                            <button className={this.state.showOpen ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOpen: !this.state.showOpen })}>Open</button>
-                            <button className={this.state.showVol ? btnSuccess : btnSecondary } onClick={() => this.setState({ showVol: !this.state.showVol })}>Volume</button>
-                            <button className={this.state.showDailyAcc ? btnSuccess : btnSecondary } onClick={() => this.setState({ showDailyAcc: !this.state.showDailyAcc })}>Daily %</button>
-                            <button className={this.state.showWeeklyAcc ? btnSuccess : btnSecondary } onClick={() => this.setState({ showWeeklyAcc: !this.state.showWeeklyAcc })}>Weekly %</button>
-                        </div>
-                    </div>
-                </div>
-
                 {/* Adjust time range */}
                 <div className={rowClass}>
                     <div className={colClass}>
@@ -226,6 +204,25 @@ class Stock extends React.Component {
                         </div>
                     </div>
                 </div>
+
+                {/* Visibility */}
+                <div className={rowClass}>
+                    <div className={colClass}>
+                        <div className={btnGroup}>
+                            <button className={this.state.showOverallAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOverallAvg: !this.state.showOverallAvg })}>Overall Avg</button>
+                            <button className={this.state.showLastTd ? btnSuccess : btnSecondary } onClick={() => this.setState({ showLastTd: !this.state.showLastTd })}>Last TD</button>
+                            <button className={this.state.showAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showAvg: !this.state.showAvg })}>Average</button>
+                            <button className={this.state.showDowAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showDowAvg: !this.state.showDowAvg })}>Day of week Avg</button>
+                        </div>
+                        <div className={btnGroup}>
+                            <button className={this.state.showOpen ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOpen: !this.state.showOpen })}>Open</button>
+                            <button className={this.state.showVol ? btnSuccess : btnSecondary } onClick={() => this.setState({ showVol: !this.state.showVol })}>Volume</button>
+                            <button className={this.state.showDailyAcc ? btnSuccess : btnSecondary } onClick={() => this.setState({ showDailyAcc: !this.state.showDailyAcc })}>Daily %</button>
+                            <button className={this.state.showWeeklyAcc ? btnSuccess : btnSecondary } onClick={() => this.setState({ showWeeklyAcc: !this.state.showWeeklyAcc })}>Weekly %</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div className={rowClass}>
                     <div className={colClass}>
                         <table className={tableClass}>

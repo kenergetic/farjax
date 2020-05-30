@@ -72,6 +72,10 @@
   width: 100px!important;
 }
 
+/* Navbar */
+.bg-purple {
+  background-color: #664488;
+}
 
 /* Row styling */
 .future-row {
