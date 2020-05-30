@@ -37,6 +37,12 @@
   }
 }
 
+
+/* Table */
+table {
+  font-size: 0.9rem;
+}
+
 .table-header {
   background-color: #444488;
   color: #fff;

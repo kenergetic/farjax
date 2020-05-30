@@ -54,36 +54,6 @@ class Stock extends React.Component {
         clearInterval(this.intervalID);
     }
 
-    // Adjust range
-    handleSubmit(event) {
-        
-        let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
-        let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
-
-        // * Debug: Day backtracking *
-        // currentTradingDay.subtract(3, 'days');
-        // forecastRange.subtract(3, 'days');
-
-        let dc = this.state.candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
-
-        this.setState({
-            displayedCandles: dc
-        });
-        event.preventDefault();
-    }
-    handleChangeForecast(event) {
-        this.setState({
-            minutesAhead: event.target.value
-        });
-        
-    }
-    handleChangeDays(event) {
-        this.setState({
-            days: event.target.value
-        });
-        
-    }
-
 
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
@@ -134,10 +104,41 @@ class Stock extends React.Component {
     getCurrentTradingDate() { 
         const currentTradingDate = moment().startOf('day').set({h: 16, m: 0});
 
-        if (currentTradingDate.day === 0) currentTradingDate.subtract(2, 'days');
-        else if (currentTradingDate.day === 6) currentTradingDate.subtract(1, 'days');
-        
+        if (currentTradingDate.day() === 0) currentTradingDate.subtract(2, 'days');
+        else if (currentTradingDate.day() === 6) currentTradingDate.subtract(1, 'days');
+
         return currentTradingDate;
+    }
+
+
+    // Adjust range
+    handleSubmit(event) {
+        
+        let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
+        let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
+
+        // * Debug: Day backtracking *
+        // currentTradingDay.subtract(3, 'days');
+        // forecastRange.subtract(3, 'days');
+
+        let dc = this.state.candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
+
+        this.setState({
+            displayedCandles: dc
+        });
+        event.preventDefault();
+    }
+    handleChangeForecast(event) {
+        this.setState({
+            minutesAhead: event.target.value
+        });
+        
+    }
+    handleChangeDays(event) {
+        this.setState({
+            days: event.target.value
+        });
+        
     }
 
 
