@@ -4,9 +4,12 @@ import {populateEstimates} from './CandleComparer';
 import {populateAccuracy} from './CandleAccuracy';
 import {fetchStock} from './CandleApi';
 
+
+
 class Stock extends React.Component {
 
     intervalID;
+    minutesAhead; //TODO: Make minutes ahead configurable
     
     constructor(props) {
         super(props);

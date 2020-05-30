@@ -2,6 +2,8 @@ import moment from 'moment-timezone';
 
 const MINUTES_AHEAD = 60;
 
+// AlphaVantage API
+
 // Used when aggregating data, this will give a candle a relative count (ex: 9:45 = 3, the 3rd closed candle of a trading day)
 // * 90 candles in a day, 450 candles in a normal trading week
 const timeIndex = [
@@ -21,12 +23,11 @@ const timeIndex = [
 async function fetchStock(currentTradingDay, symbol) {
 
     let candles = [];
-
     // Use EDT
     moment.tz.setDefault('American/New York');
 
     // Get data from the API
-    await fetch('http://ec2-3-14-65-75.us-east-2.compute.amazonaws.com/api/stocks/get/spy')
+    await fetch(process.env.REACT_APP_API_URL + 'stocks/get/spy')
         .then(res => res.json())
         .then(
             (data) => {
