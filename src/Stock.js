@@ -17,8 +17,10 @@ class Stock extends React.Component {
             candles: [],
             displayedCandles: [],
             
-            // Days back
+            // How many days back of candles to show
             days: 3,
+            // How many minutes ahead to forecast
+            minutesAhead: 30,
 
             // Visibility
             showOpen: true,
@@ -27,10 +29,13 @@ class Stock extends React.Component {
             showAvg: true,
             showDowAvg: true,
             showOverallAvg: true,
+            showDailyAcc: true,
+            showWeeklyAcc: false,
          };
          
         this.handleChangeDays = this.handleChangeDays.bind(this);
-        this.handleSubmitDays = this.handleSubmitDays.bind(this);
+        this.handleChangeForecast = this.handleChangeForecast.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
          
         // Use EDT
         moment.tz.setDefault('American/New York');
@@ -50,19 +55,30 @@ class Stock extends React.Component {
         clearInterval(this.intervalID);
     }
 
-    // Days back control
-    handleSubmitDays(event) {
+    // Adjust range
+    handleSubmit(event) {
         
         let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
-        let dc = this.state.candles.filter(x => x.date.isAfter(daysBack));
+        let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
+
+        // * Debug: Day backtracking *
+        // currentTradingDay.subtract(3, 'days');
+        // forecastRange.subtract(3, 'days');
+
+        let dc = this.state.candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
 
         this.setState({
             displayedCandles: dc
         });
         event.preventDefault();
     }
-    handleChangeDays(event) {
+    handleChangeForecast(event) {
+        this.setState({
+            minutesAhead: event.target.value
+        });
         
+    }
+    handleChangeDays(event) {
         this.setState({
             days: event.target.value
         });
@@ -80,13 +96,17 @@ class Stock extends React.Component {
 
         let currentTradingDay = this.getCurrentTradingDate();
         let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
+        let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
+
+        console.log(forecastRange.format('MM/DD HH:mm'));
 
         // * Debug: Day backtracking *
         // currentTradingDay.subtract(3, 'days');
+        // forecastRange.subtract(3, 'days');
 
         // Get candles
         // console.time('fetch data');
-        candles = await fetchStock(currentTradingDay);
+        candles = await fetchStock(currentTradingDay, this.state.minutesAhead);
         // console.timeEnd('fetch data');
         
         // Calculate close estimates for each candle
@@ -104,7 +124,7 @@ class Stock extends React.Component {
             return 1;
         });
 
-        displayedCandles = candles.filter(x => x.date.isAfter(daysBack));
+        displayedCandles = candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
 
         this.setState({
             candles: candles,
@@ -138,14 +158,15 @@ class Stock extends React.Component {
 
         // Form
         const formInline = 'form-inline';
-        const formGroup = 'form-group mb-4';
-        const formControl = 'form-control';
+        const formGroup = 'form-group mb-4 ml-4';
+        const textbox = 'form-control textbox-sm';
         const floatRight = 'float-right';
         const paddingRight = 'pr-4';
 
         // Toggle visibility buttons
         const btnGroup ='btn-group float-right p-2'
         const btnPrimary = 'btn btn-primary';
+        const btnInfo = 'btn btn-info';
         const btnSecondary = 'btn btn-secondary';
         const btnSuccess = 'btn btn-success';
 
@@ -180,19 +201,26 @@ class Stock extends React.Component {
                         <div className={btnGroup}>
                             <button className={this.state.showOpen ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOpen: !this.state.showOpen })}>Open</button>
                             <button className={this.state.showVol ? btnSuccess : btnSecondary } onClick={() => this.setState({ showVol: !this.state.showVol })}>Volume</button>
+                            <button className={this.state.showDailyAcc ? btnSuccess : btnSecondary } onClick={() => this.setState({ showDailyAcc: !this.state.showDailyAcc })}>Daily %</button>
+                            <button className={this.state.showWeeklyAcc ? btnSuccess : btnSecondary } onClick={() => this.setState({ showWeeklyAcc: !this.state.showWeeklyAcc })}>Weekly %</button>
                         </div>
                     </div>
                 </div>
 
-                {/* Days back form */}
+                {/* Adjust time range */}
                 <div className={rowClass}>
                     <div className={colClass}>
                         <div className={floatRight}>
-                            <form className={formInline} onSubmit={this.handleSubmitDays}>
+                            <form className={formInline} onSubmit={this.handleSubmit}>
                                 <div className={formGroup}>                            
                                     <label className={paddingRight}>Days Back:</label>
-                                    <input type="text" className={formControl} value={this.state.days} onChange={this.handleChangeDays}></input>
-                                    <input className={btnPrimary} type="submit" value="Go"/>
+                                    <input type="text" className={textbox} value={this.state.days} onChange={this.handleChangeDays}></input>
+                                    <input className={btnInfo} type="submit" value="Go"/>
+                                </div>
+                                <div className={formGroup}>                            
+                                    <label className={paddingRight}>Minutes Ahead:</label>
+                                    <input type="text" className={textbox} value={this.state.minutesAhead} onChange={this.handleChangeForecast}></input>
+                                    <input className={btnInfo} type="submit" value="Go"/>
                                 </div>
                             </form> 
                         </div>
@@ -211,23 +239,23 @@ class Stock extends React.Component {
 
                                     { this.state.showOverallAvg && <td>Estimate<br/><i>(Combined)</i></td> }
                                     { this.state.showOverallAvg && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showOverallAvg && <td>Daily<br/>(%)</td> }
-                                    { this.state.showOverallAvg && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
 
                                     { this.state.showLastTd && <td>Estimated<br/>(Previous)</td> }
                                     { this.state.showLastTd && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showLastTd && <td>Daily<br/>(%)</td> }
-                                    { this.state.showLastTd && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
 
                                     { this.state.showAvg && <td>Estimated<br/>(10 day)</td> }
                                     { this.state.showAvg && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showAvg && <td>Daily<br/>(%)</td> }
-                                    { this.state.showAvg && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
                                     
                                     { this.state.showDowAvg && <td>Estimated<br/>(DoW)</td> }
                                     { this.state.showDowAvg && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showDowAvg && <td>Daily<br/>(%)</td> }
-                                    { this.state.showDowAvg && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
                                 </tr>
                             </thead>
                             <tbody>
@@ -255,7 +283,7 @@ class Stock extends React.Component {
                                         { this.state.showOverallAvg &&
                                             <td className={x.estCloseOverallAverageClassName}>{x.estCloseOverallAverageAccuracy}</td>
                                         }
-                                        { this.state.showOverallAvg &&
+                                        { this.state.showOverallAvg && this.state.showDailyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseOverallAverageAccuracyDaily}
@@ -263,7 +291,7 @@ class Stock extends React.Component {
                                                 </div>
                                             </td>
                                         }
-                                        { this.state.showOverallAvg &&
+                                        { this.state.showOverallAvg && this.state.showWeeklyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseOverallAverageAccuracyWeekly}
@@ -285,7 +313,7 @@ class Stock extends React.Component {
                                             <td className={x.estCloseLastTdClassName}>{x.estCloseLastTdAccuracy}
                                             </td>
                                         }                                        
-                                        { this.state.showLastTd &&
+                                        { this.state.showLastTd && this.state.showDailyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseLastTdAccuracyDaily}
@@ -293,7 +321,7 @@ class Stock extends React.Component {
                                                 </div>
                                             </td>
                                         }
-                                        { this.state.showLastTd &&
+                                        { this.state.showLastTd && this.state.showWeeklyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseLastTdAccuracyWeekly}
@@ -314,7 +342,7 @@ class Stock extends React.Component {
                                         { this.state.showAvg &&
                                             <td className={x.estCloseAverageClassName}>{x.estCloseAverageAccuracy}</td>
                                         }                                        
-                                        { this.state.showAvg &&
+                                        { this.state.showAvg && this.state.showDailyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseAverageAccuracyDaily}
@@ -322,7 +350,7 @@ class Stock extends React.Component {
                                                 </div>
                                             </td>
                                         }
-                                        { this.state.showAvg &&
+                                        { this.state.showAvg && this.state.showWeeklyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseAverageAccuracyWeekly}
@@ -344,7 +372,7 @@ class Stock extends React.Component {
                                         { this.state.showDowAvg &&
                                             <td className={x.estCloseDowAverageClassName}>{x.estCloseDowAverageAccuracy}</td>
                                         }                                        
-                                        { this.state.showDowAvg &&
+                                        { this.state.showDowAvg && this.state.showDailyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseDowAverageAccuracyDaily}
@@ -352,7 +380,7 @@ class Stock extends React.Component {
                                                 </div>
                                             </td>
                                         }
-                                        { this.state.showDowAvg &&
+                                        { this.state.showDowAvg && this.state.showWeeklyAcc && 
                                             <td>
                                                 <div className={tooltip}>
                                                     {x.estCloseDowAverageAccuracyWeekly}

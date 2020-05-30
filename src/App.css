@@ -68,6 +68,10 @@
   visibility: visible;
 }
 
+.textbox-sm {
+  width: 100px!important;
+}
+
 
 /* Row styling */
 .future-row {

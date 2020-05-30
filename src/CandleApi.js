@@ -1,6 +1,5 @@
 import moment from 'moment-timezone';
 
-const MINUTES_AHEAD = 60;
 
 // AlphaVantage API
 
@@ -20,7 +19,7 @@ const timeIndex = [
 
 
 // Get recent candles for a stock from the api (currently only SPY)
-async function fetchStock(currentTradingDay, symbol) {
+async function fetchStock(currentTradingDay) {
 
     let candles = [];
     // Use EDT
@@ -82,8 +81,8 @@ function populateCurrentTradingDate(candles, currentTradingDay) {
         let currentCandle = currentTradingDay.subtract(5, 'minutes');
         let candleExists = candles.find(x => x.date.isSame(currentCandle));
 
-        // Only tick up to 30 mins in the future?
-        let now = moment().add(MINUTES_AHEAD, 'minutes');
+        // Look ahead up to the rest of today
+        let now = moment().add(480, 'minutes');
         if (currentCandle.isAfter(now)) {
             continue;
         }
