@@ -244,18 +244,18 @@ class Stock extends React.Component {
 
                                     { this.state.showLastTd && <td>Estimated<br/>(Previous)</td> }
                                     { this.state.showLastTd && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
-                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showLastTd && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showLastTd && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
 
                                     { this.state.showAvg && <td>Estimated<br/>(10 day)</td> }
                                     { this.state.showAvg && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
-                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
                                     
                                     { this.state.showDowAvg && <td>Estimated<br/>(DoW)</td> }
                                     { this.state.showDowAvg && <td>Accuracy<br/>($)</td> }
-                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
-                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+                                    { this.state.showDowAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showDowAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
                                 </tr>
                             </thead>
                             <tbody>
