@@ -109,7 +109,7 @@ class StockChart extends React.Component {
                 <div className='row'>
                     <div className='col-sm-12'>
                         <div className={btnGroup}>
-                            <button className={this.state.showClose ? btnSuccess : btnSecondary } onClick={() => this.setState({ showClose: !this.state.showClose })}>Overall Avg</button>
+                            <button className={this.state.showClose ? btnSuccess : btnSecondary } onClick={() => this.setState({ showClose: !this.state.showClose })}>Close</button>
                             <button className={this.state.showOverallAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOverallAvg: !this.state.showOverallAvg })}>Overall Avg</button>
                             <button className={this.state.showLastTd ? btnSuccess : btnSecondary } onClick={() => this.setState({ showLastTd: !this.state.showLastTd })}>Last TD</button>
                             <button className={this.state.showAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showAvg: !this.state.showAvg })}>Average</button>
