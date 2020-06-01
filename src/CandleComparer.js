@@ -1,3 +1,4 @@
+import moment from 'moment-timezone';
 
 // ----------------------------
 // Takes an array of 5-minute candles from a stock and applies
@@ -144,6 +145,16 @@ function populateOverallAverage(candle) {
 // ----------------------------
 
 
+// Get the end of the current trading day (04:00)
+// - TODO: Ignores weekends, but does not handle holidays (and half-days?)
+function getCurrentTradingDate() { 
+    const currentTradingDate = moment().startOf('day').set({h: 16, m: 0});
+    if (currentTradingDate.day() === 0) currentTradingDate.subtract(2, 'days');
+    else if (currentTradingDate.day() === 6) currentTradingDate.subtract(1, 'days');
+
+    return currentTradingDate;
+}
+
 // Estimate the candle's price by using the average price change of previous candles with the same time
 // * maxCandles: How many candles back to examine
 // * dayOfWeekOnly: only include candles with the same dayOfWeek (ex: only Tuesdays)
@@ -278,4 +289,4 @@ function getPreviousCandle(candles, candle, index) {
     // return c;
 }
 
-export {populateEstimates};
+export {getCurrentTradingDate, populateEstimates};

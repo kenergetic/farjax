@@ -1,10 +1,11 @@
 import React from 'react';
-import moment, { relativeTimeThreshold } from 'moment-timezone';
-import {populateEstimates} from './CandleComparer';
+import moment from 'moment-timezone';
+import {populateEstimates, getCurrentTradingDate} from './CandleComparer';
 import {populateAccuracy} from './CandleAccuracy';
 import {fetchStock} from './CandleApi';
 
 
+// TODO: Change the component layout so Stock(Table) and StockChart share the api call
 
 class Stock extends React.Component {
 
@@ -63,8 +64,8 @@ class Stock extends React.Component {
         let candles = [];
         let displayedCandles = [];
 
-        let currentTradingDay = this.getCurrentTradingDate();
-        let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
+        let currentTradingDay = getCurrentTradingDate();
+        let daysBack = moment(getCurrentTradingDate().subtract(this.state.days, 'days'));
         let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
 
         // * Debug: Day backtracking *
@@ -99,16 +100,6 @@ class Stock extends React.Component {
         });
     }
 
-    // Get the end of the current trading day (04:00)
-    // - TODO: Ignores weekends, but does not handle holidays (and half-days?)
-    getCurrentTradingDate() { 
-        const currentTradingDate = moment().startOf('day').set({h: 16, m: 0});
-
-        if (currentTradingDate.day() === 0) currentTradingDate.subtract(2, 'days');
-        else if (currentTradingDate.day() === 6) currentTradingDate.subtract(1, 'days');
-
-        return currentTradingDate;
-    }
 
 
     // Adjust range
@@ -148,7 +139,6 @@ class Stock extends React.Component {
     render() {
 
         // Container/Table bootstrap classes
-        const rowClass = 'row';
         const colClass = 'col-sm-12 col-lg-10 offset-lg-1';
         const tableClass = 'table table-striped';
         const headerClass = 'table-header';
@@ -161,8 +151,7 @@ class Stock extends React.Component {
         const paddingRight = 'pr-4';
 
         // Toggle visibility buttons
-        const btnGroup ='btn-group float-right p-2'
-        const btnPrimary = 'btn btn-primary';
+        const btnGroup ='btn-group float-right p-2';
         const btnInfo = 'btn btn-info';
         const btnSecondary = 'btn btn-secondary';
         const btnSuccess = 'btn btn-success';
@@ -185,9 +174,8 @@ class Stock extends React.Component {
 
         return (
             <div>
-                
                 {/* Adjust time range */}
-                <div className={rowClass}>
+                <div className='row'>
                     <div className={colClass}>
                         <div className={floatRight}>
                             <form className={formInline} onSubmit={this.handleSubmit}>
@@ -207,7 +195,7 @@ class Stock extends React.Component {
                 </div>
 
                 {/* Visibility */}
-                <div className={rowClass}>
+                <div className='row'>
                     <div className={colClass}>
                         <div className={btnGroup}>
                             <button className={this.state.showOverallAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOverallAvg: !this.state.showOverallAvg })}>Overall Avg</button>
@@ -224,7 +212,8 @@ class Stock extends React.Component {
                     </div>
                 </div>
 
-                <div className={rowClass}>
+                {/* Table */}
+                <div className='row'>
                     <div className={colClass}>
                         <table className={tableClass}>
                             <thead>
