@@ -138,11 +138,11 @@ class StockChart extends React.Component {
                             />
                             <Tooltip formatter={(value) => '$' + value} />
                             <Legend verticalAlign='top' verticalAlign='top'/>
-                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} opacity={0.4} stroke="#00a0a1" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} opacity={0.4} stroke="#427eb9" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={false} opacity={0.4} stroke="#67798a" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} opacity={0.6} stroke="#21a672" strokeWidth={3}/>
-                            <Line dataKey={this.state.showClose ? "close" : null} stroke="#e49981" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} opacity={0.5} stroke="#00a0a1" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} opacity={0.5} stroke="#427eb9" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={false} opacity={0.5} stroke="#67798a" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} opacity={0.75} stroke="#21a672" strokeWidth={3}/>
+                            <Line dataKey={this.state.showClose ? "close" : null} stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
                         </LineChart>
                     </ResponsiveContainer>
                     </div>
@@ -179,13 +179,18 @@ class CustomizedXAxisTick extends PureComponent {
     let axisTime = moment(payload.value, 'HH:mm');
     let now = moment();
     let next = moment().add(5, 'minutes');
+    let last = moment().subtract(5, 'minutes');
 
     if (axisTime.hour() >= 1 && axisTime.hour() <= 4) axisTime.add(12, 'hours');
-    if (axisTime.isAfter(now) && axisTime.isBefore(next)) {
+    if (axisTime.isAfter(last) && axisTime.isBefore(now)) {
         fillColor = '#08a';
         myStyle = {'font-weight': 'bold'};
     }
-    else if (axisTime.isAfter(next)) {        
+    else if (axisTime.isAfter(now) && axisTime.isBefore(next)) {
+        fillColor = '#f0a';
+        myStyle = {'font-weight': 'bold'};
+    }
+    else if (axisTime.isAfter(now)) {        
         fillColor = '#c04';
     }
     
