@@ -121,7 +121,7 @@ class StockChart extends React.Component {
                 {/* Visibility */}
                 <div className='row'>
                     <div className='col-sm-12 col-lg-10 offset-lg-1'>
-                    <ResponsiveContainer width='100%' height={500}>
+                    <ResponsiveContainer width='100%' height={600}>
                         <LineChart
                             data={this.state.chartData}
                             margin={{
@@ -130,9 +130,13 @@ class StockChart extends React.Component {
                         >
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="timeString" tick={<CustomizedAxisTick />} height={50}/>
-                            <YAxis type="number" domain={['auto', 'auto']} 
-                                    allowDecimals={false} />
-                            <Tooltip />
+                            <YAxis type="number" 
+                                domain={['auto', 'auto']} 
+                                allowDecimals={false}
+                                interval={0}
+                                tick={<CustomizedYAxisTick />}
+                            />
+                            <Tooltip formatter={(value) => '$' + value} />
                             <Legend verticalAlign='top' verticalAlign='top'/>
                             <Line  dataKey={this.state.showClose ? "close" : null} stroke="#e49981" dot={false} activeDot={{ r: 8 }} strokeWidth={3}/>
                             <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} stroke="#21a672" strokeWidth={3}/>
@@ -158,6 +162,20 @@ class CustomizedAxisTick extends PureComponent {
     return (
         <g transform={`translate(${x},${y})`}>
         <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-40)">{payload.value}</text>
+        </g>
+    );
+    }
+}
+
+class CustomizedYAxisTick extends PureComponent {
+    render() {
+    const {
+        x, y, stroke, payload,
+    } = this.props;
+
+    return (
+        <g transform={`translate(${x},${y})`}>
+        <text textAnchor="end" fill="#666">${payload.value}</text>
         </g>
     );
     }
