@@ -40,7 +40,7 @@ class StockChart extends React.Component {
         await this.pullStockData();
         
         // Refresh every minute
-        //this.intervalID = setInterval(this.pullStockData.bind(this), 60000);
+        this.intervalID = setInterval(this.pullStockData.bind(this), 60000);
     }
 
     // Stop the interval from continuing to run
@@ -129,7 +129,7 @@ class StockChart extends React.Component {
                             }}
                         >
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="timeString" tick={<CustomizedAxisTick />} height={50}/>
+                            <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50}/>
                             <YAxis type="number" 
                                 domain={['auto', 'auto']} 
                                 allowDecimals={false}
@@ -138,11 +138,11 @@ class StockChart extends React.Component {
                             />
                             <Tooltip formatter={(value) => '$' + value} />
                             <Legend verticalAlign='top' verticalAlign='top'/>
-                            <Line  dataKey={this.state.showClose ? "close" : null} stroke="#e49981" dot={false} activeDot={{ r: 8 }} strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} stroke="#21a672" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} stroke="#00a0a1" strokeWidth={2}/>
-                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} stroke="#427eb9" strokeWidth={2}/>
-                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={false} stroke="#67798a" strokeWidth={2}/>
+                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} opacity={0.4} stroke="#00a0a1" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} opacity={0.4} stroke="#427eb9" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={false} opacity={0.4} stroke="#67798a" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} opacity={0.6} stroke="#21a672" strokeWidth={3}/>
+                            <Line dataKey={this.state.showClose ? "close" : null} stroke="#e49981" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
                         </LineChart>
                     </ResponsiveContainer>
                     </div>
@@ -152,16 +152,46 @@ class StockChart extends React.Component {
         }
 }
 
+class CustomizedDot extends PureComponent {
+    render() {
+        const { cx, cy } = this.props;
+        const payload = this.props.payload;
+        console.log(this.props.payload.timeString)
+        return (
+            <svg cx={cx - 10} cy={cy - 10} height="20" width="20">
+            <circle cx={cx - 10} cy={cy - 10} r={25} stroke="black" strokeWidth={6} fill="red" />
+            </svg>
+        );
+    }
 
-class CustomizedAxisTick extends PureComponent {
+}
+
+class CustomizedXAxisTick extends PureComponent {
     render() {
     const {
         x, y, stroke, payload,
     } = this.props;
 
+    let fillColor = '#999';
+    let myStyle = {};
+    
+    // Lazy compare - color the current X-tick, and color future X-ticks 
+    let axisTime = moment(payload.value, 'HH:mm');
+    let now = moment();
+    let next = moment().add(5, 'minutes');
+
+    if (axisTime.hour() >= 1 && axisTime.hour() <= 4) axisTime.add(12, 'hours');
+    if (axisTime.isAfter(now) && axisTime.isBefore(next)) {
+        fillColor = '#08a';
+        myStyle = {'font-weight': 'bold'};
+    }
+    else if (axisTime.isAfter(next)) {        
+        fillColor = '#c04';
+    }
+    
     return (
         <g transform={`translate(${x},${y})`}>
-        <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-40)">{payload.value}</text>
+            <text x={0} y={5} dx={0} textAnchor="end" fill={fillColor} transform="rotate(-90)" style={myStyle}>{payload.value}</text>
         </g>
     );
     }
@@ -169,27 +199,18 @@ class CustomizedAxisTick extends PureComponent {
 
 class CustomizedYAxisTick extends PureComponent {
     render() {
-    const {
-        x, y, stroke, payload,
-    } = this.props;
+        const {
+            x, y, stroke, payload,
+        } = this.props;
 
-    return (
-        <g transform={`translate(${x},${y})`}>
-        <text textAnchor="end" fill="#666">${payload.value}</text>
-        </g>
-    );
+        console.log(payload.value);
+
+        return (
+            <g transform={`translate(${x},${y})`}>
+                <text textAnchor="end" fill="#666">${payload.value}</text>
+            </g>
+        );
     }
 }
-
-class CustomizedLabel extends PureComponent {
-    render() {
-      const {
-        x, y, stroke, value,
-      } = this.props;
-  
-      return <text x={x} y={y} dy={-4} fill={stroke} fontSize={10} textAnchor="middle">{value}</text>;
-    }
-  }
-  
 
 export default StockChart;
