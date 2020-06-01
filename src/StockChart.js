@@ -120,7 +120,7 @@ class StockChart extends React.Component {
 
                 {/* Visibility */}
                 <div className='row'>
-                    <div className='col-sm-12 col-lg-8 offset-lg-2'>
+                    <div className='col-sm-12 col-lg-10 offset-lg-1'>
                     <ResponsiveContainer width='100%' height={500}>
                         <LineChart
                             data={this.state.chartData}
