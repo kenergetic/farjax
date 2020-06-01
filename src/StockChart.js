@@ -52,7 +52,7 @@ class StockChart extends React.Component {
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
 
-        console.log('chart: refreshing data');
+        console.log(moment().format('MM/DD') +  ': refreshing data');
 
         let candles = [];
         let displayedCandles = [];
@@ -135,9 +135,9 @@ class StockChart extends React.Component {
                             <Tooltip />
                             <Legend verticalAlign='top' verticalAlign='top'/>
                             <Line  dataKey={this.state.showClose ? "close" : null} stroke="#e49981" dot={false} activeDot={{ r: 8 }} strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} stroke="#2156c2" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} stroke="#0070a1" strokeWidth={2}/>
-                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} stroke="#424e59" strokeWidth={2}/>
+                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} stroke="#21a672" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} stroke="#00a0a1" strokeWidth={2}/>
+                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} stroke="#427eb9" strokeWidth={2}/>
                             <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={false} stroke="#67798a" strokeWidth={2}/>
                         </LineChart>
                     </ResponsiveContainer>

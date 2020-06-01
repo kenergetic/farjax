@@ -33,6 +33,7 @@ class Stock extends React.Component {
             showWeeklyAcc: false,
          };
          
+        console.log('constructor');
         this.handleChangeDays = this.handleChangeDays.bind(this);
         this.handleChangeForecast = this.handleChangeForecast.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -43,6 +44,7 @@ class Stock extends React.Component {
 
     async componentDidMount() {
         
+        console.log('componentDidMount');
         // Get stock data from the API, and calculate out estimates and accuracy
         await this.pullStockData();
         
@@ -59,7 +61,7 @@ class Stock extends React.Component {
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
 
-        //console.log('refreshing data');
+        console.log(moment().format('MM/DD') +  ': refreshing data');
 
         let candles = [];
         let displayedCandles = [];
@@ -105,7 +107,7 @@ class Stock extends React.Component {
     // Adjust range
     handleSubmit(event) {
         
-        let daysBack = moment(this.getCurrentTradingDate().subtract(this.state.days, 'days'));
+        let daysBack = moment(getCurrentTradingDate().subtract(this.state.days, 'days'));
         let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
 
         // * Debug: Day backtracking *
@@ -117,6 +119,7 @@ class Stock extends React.Component {
         this.setState({
             displayedCandles: dc
         });
+
         event.preventDefault();
     }
     handleChangeForecast(event) {
@@ -234,7 +237,7 @@ class Stock extends React.Component {
                                     { this.state.showLastTd && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
                                     { this.state.showLastTd && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
 
-                                    { this.state.showAvg && <td>Estimated<br/>(10 day)</td> }
+                                    { this.state.showAvg && <td>Estimated<br/>(50 day)</td> }
                                     { this.state.showAvg && <td>Accuracy<br/>($)</td> }
                                     { this.state.showAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
                                     { this.state.showAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }

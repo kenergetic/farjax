@@ -29,7 +29,7 @@ function populateAccuracy(candles) {
             candle.estCloseLastTdAccuracyDaily = lastTdDailyAverage + '%';
             candle.estCloseLastTdAccuracyDailyNarrow = `Narrow (0.25) accuracy: ${lastTdDailyNarrowAverage}%`;
 
-            // Average (10-day)
+            // Average (50-day)
             let averageCandlesAccurate = dailyCandles.filter(x => Math.abs(x.estCloseAverageAccuracy) <= 0.5).length;
             let averageCandlesAccurateNarrow = dailyCandles.filter(x => Math.abs(x.estCloseAverageAccuracy) <= 0.25).length;
             
@@ -73,7 +73,7 @@ function populateAccuracy(candles) {
             candle.estCloseLastTdAccuracyWeekly = lastTdWeeklyAverage + '%';
             candle.estCloseLastTdAccuracyWeeklyNarrow = `Narrow (0.25) accuracy: ${lastTdWeeklyNarrowAverage}%`;
 
-            // Average (10-day)
+            // Average (50-day)
             let averageCandlesAccurate = weeklyCandles.filter(x => Math.abs(x.estCloseAverageAccuracy) <= 0.5).length;
             let averageCandlesAccurateNarrow = weeklyCandles.filter(x => Math.abs(x.estCloseAverageAccuracy) <= 0.25).length;
             

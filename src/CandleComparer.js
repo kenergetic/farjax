@@ -1,5 +1,6 @@
 import moment from 'moment-timezone';
 
+moment.tz.setDefault('American/New York');
 // ----------------------------
 // Takes an array of 5-minute candles from a stock and applies
 // various estimation strategies to each candle
@@ -42,10 +43,10 @@ function populateEstimatedCloseLastTd(candles, candle, index) {
 }
 
 // Averages strategy
-// Compare the price increase (Open->Close) on the last 10 trading days 
+// Compare the price increase (Open->Close) on the last 50 trading days 
 function populateEstimatedCloseAverage(candles, candle, index) {
 
-    const result = estimateCandlePrice(candles, candle, index, 10, false);
+    const result = estimateCandlePrice(candles, candle, index, 50, false);
     if (result) {
         candle.estCloseAverage = result.estimatedClose;
         candle.estCloseAverageDetails = result.details;
@@ -55,11 +56,11 @@ function populateEstimatedCloseAverage(candles, candle, index) {
 }
 
 // Averages Day-of-week strategy
-// Compare the price increase (Open->Close) on the last 4 trading days that 
+// Compare the price increase (Open->Close) on the last 7 trading days that 
 // are the same day of week (e.g. Tuesday)
 function populateEstimatedCloseDowAverage(candles, candle, index) {
 
-    const result = estimateCandlePrice(candles, candle, index, 4, true);
+    const result = estimateCandlePrice(candles, candle, index, 50, true);
     if (result) {
         candle.estCloseDowAverage = result.estimatedClose;
         candle.estCloseDowAverageDetails = result.details;
