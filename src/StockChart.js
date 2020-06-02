@@ -18,7 +18,7 @@ class StockChart extends React.Component {
         this.state = { 
             candles: [],
             displayedCandles: [],
-            chartData: [],
+            data: [],
             
             // How many days back of candles to show
             days: 1,
@@ -82,7 +82,7 @@ class StockChart extends React.Component {
         displayedCandles = candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
 
         // TODO: Massage data
-        let chartData = displayedCandles.sort((a, b) => {
+        let data = displayedCandles.sort((a, b) => {
             if (a.date.isAfter(b.date)) return 1;
             return -1;
         });
@@ -90,7 +90,7 @@ class StockChart extends React.Component {
         this.setState({
             candles: candles,
             displayedCandles: displayedCandles,
-            chartData: chartData
+            data: data
         });
         
     }
@@ -123,7 +123,7 @@ class StockChart extends React.Component {
                     <div className='col-sm-12 col-lg-10 offset-lg-1'>
                     <ResponsiveContainer width='100%' height={600}>
                         <LineChart
-                            data={this.state.chartData}
+                            data={this.state.data}
                             margin={{
                             top: 5, right: 30, left: 20, bottom: 5,
                             }}
@@ -138,11 +138,11 @@ class StockChart extends React.Component {
                             />
                             <Tooltip formatter={(value) => '$' + value} />
                             <Legend verticalAlign='top' verticalAlign='top'/>
-                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={false} opacity={0.5} stroke="#00a0a1" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={false} opacity={0.5} stroke="#427eb9" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={false} opacity={0.5} stroke="#67798a" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={false} opacity={0.75} stroke="#21a672" strokeWidth={3}/>
-                            <Line dataKey={this.state.showClose ? "close" : null} stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.5} stroke="#00a0a1" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.5} stroke="#427eb9" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.5} stroke="#67798a" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.75} stroke="#21a672" strokeWidth={3}/>
+                            <Line dataKey={this.state.showClose ? "close" : null} connectNulls type="monotone" stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
                         </LineChart>
                     </ResponsiveContainer>
                     </div>
@@ -152,18 +152,32 @@ class StockChart extends React.Component {
         }
 }
 
+// Return a dot for the current 5-minute time and the next, if the line has a value
 class CustomizedDot extends PureComponent {
     render() {
-        const { cx, cy } = this.props;
-        const payload = this.props.payload;
-        console.log(this.props.payload.timeString)
-        return (
-            <svg cx={cx - 10} cy={cy - 10} height="20" width="20">
-            <circle cx={cx - 10} cy={cy - 10} r={25} stroke="black" strokeWidth={6} fill="red" />
-            </svg>
-        );
-    }
+        const {cx, cy, stroke, payload, value} = this.props;
+        
+        // No charted value - return nothing
+        if (cy === null) return(<svg></svg>);
 
+        // Lazy compare - color the current X-tick, and color future X-ticks 
+        let axisTime = moment(payload.timeString, 'HH:mm');
+        let now = moment();
+        let next = moment().add(5, 'minutes');
+        let last = moment().subtract(5, 'minutes');
+
+        if (axisTime.hour() >= 1 && axisTime.hour() <= 4) axisTime.add(12, 'hours');
+        if (axisTime.isAfter(last) && axisTime.isBefore(now)) {
+            return (<circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#08a" />)
+        }
+        else if (axisTime.isAfter(now) && axisTime.isBefore(next)) {            
+            return (<circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#c04" />)
+        }
+        else {
+            return(<svg></svg>)
+        }
+
+    }
 }
 
 class CustomizedXAxisTick extends PureComponent {
@@ -184,11 +198,11 @@ class CustomizedXAxisTick extends PureComponent {
     if (axisTime.hour() >= 1 && axisTime.hour() <= 4) axisTime.add(12, 'hours');
     if (axisTime.isAfter(last) && axisTime.isBefore(now)) {
         fillColor = '#08a';
-        myStyle = {'font-weight': 'bold'};
+        myStyle = {'fontWeight': 'bold'};
     }
     else if (axisTime.isAfter(now) && axisTime.isBefore(next)) {
         fillColor = '#f0a';
-        myStyle = {'font-weight': 'bold'};
+        myStyle = {'fontWeight': 'bold'};
     }
     else if (axisTime.isAfter(now)) {        
         fillColor = '#c04';
