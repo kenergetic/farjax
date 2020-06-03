@@ -33,7 +33,6 @@ class Stock extends React.Component {
             showWeeklyAcc: false,
          };
          
-        console.log('constructor');
         this.handleChangeDays = this.handleChangeDays.bind(this);
         this.handleChangeForecast = this.handleChangeForecast.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -44,7 +43,6 @@ class Stock extends React.Component {
 
     async componentDidMount() {
         
-        console.log('componentDidMount');
         // Get stock data from the API, and calculate out estimates and accuracy
         await this.pullStockData();
         
@@ -61,7 +59,7 @@ class Stock extends React.Component {
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
 
-        console.log(moment().format('MM/DD') +  ': refreshing data');
+        //console.log(moment().format('MM/DD') +  ': refreshing data');
 
         let candles = [];
         let displayedCandles = [];

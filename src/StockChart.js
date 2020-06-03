@@ -7,7 +7,10 @@ import {populateEstimates, getCurrentTradingDate} from './CandleComparer';
 import {populateAccuracy} from './CandleAccuracy';
 import {fetchStock} from './CandleApi';
 
-
+// Track current times
+let now = new Date();
+let next = new Date(new Date() + 300000);
+let last  = new Date(new Date() - 300000);
 
 
 class StockChart extends React.Component {
@@ -18,6 +21,7 @@ class StockChart extends React.Component {
         this.state = { 
             candles: [],
             displayedCandles: [],
+            tableCandles: [],
             data: [],
             
             // How many days back of candles to show
@@ -25,12 +29,18 @@ class StockChart extends React.Component {
             // How many minutes ahead to forecast (whole day)
             minutesAhead: 480,
 
-            // Visibility
+            // Chart Visibility
             showClose: true,
             showOverallAvg: true,
             showLastTd: false,
-            showAvg: false,
-            showDowAvg: false
+            showAvg: true,
+            showDowAvg: false,
+            
+            // Table visibility
+            showOpen: false,
+            showVol: false,
+            showDailyAcc: true,
+            showWeeklyAcc: false,
          };
     }
 
@@ -52,14 +62,24 @@ class StockChart extends React.Component {
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
 
-        console.log(moment().format('MM/DD') +  ': refreshing data');
+        now = new Date();
+        next = new Date();
+        last  = new Date();
+        next.setMinutes(now.getMinutes() + 5);
+        last.setMinutes(now.getMinutes() - 5);
 
         let candles = [];
-        let displayedCandles = [];
+        let chartCandles = [];
+        let tableCandles = [];
 
+        // Chart range
         let currentTradingDay = getCurrentTradingDate();
         let daysBack = moment(getCurrentTradingDate().subtract(this.state.days, 'days'));
         let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
+
+        // ShortTable range
+        let tableFrom = moment().subtract(5, 'minutes');
+        let tableTo = moment().add(5, 'minutes');
 
         // * Debug: Day backtracking *
         // currentTradingDay.subtract(3, 'days');
@@ -75,21 +95,24 @@ class StockChart extends React.Component {
         populateAccuracy(candles);
 
         candles.sort((a, b) => {
-            if (a.date.isAfter(b.date)) return -1;
+            if (a.date.isSameOrAfter(b.date)) return -1;
             return 1;
         });
 
-        displayedCandles = candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
+        chartCandles = candles.filter(x => x.date.isSameOrAfter(daysBack) && x.date.isSameOrBefore(forecastRange));
+
+        tableCandles = candles.filter(x => x.date.isSameOrAfter(tableFrom) && x.date.isSameOrBefore(tableTo));
 
         // TODO: Massage data
-        let data = displayedCandles.sort((a, b) => {
-            if (a.date.isAfter(b.date)) return 1;
+        let data = chartCandles.sort((a, b) => {
+            if (a.date.isSameOrAfter(b.date)) return 1;
             return -1;
         });
         
         this.setState({
             candles: candles,
-            displayedCandles: displayedCandles,
+            displayedCandles: chartCandles,
+            tableCandles: tableCandles,
             data: data
         });
         
@@ -99,13 +122,30 @@ class StockChart extends React.Component {
 
     render() {
 
+        const tableClass = 'table table-striped';
+        const headerClass = 'table-header';
+
         const btnGroup ='btn-group float-right p-2';
         const btnSecondary = 'btn btn-secondary';
         const btnSuccess = 'btn btn-success';
 
+        // Specific table classes
+        const futureRowClass = 'future-row';
+        const estimateLast = 'estimate-last';
+        const estimateAvg = 'estimate-average';
+        const estimateDowAvg = 'estimate-dow-average';
+        const estimateOverallAvg = 'estimate-overall';
+
+        const symbolClass = 'symbol'
+        const closePriceClass = 'close-price';
+
+        // Tooltip classes
+        const tooltip = 'tt';
+        const tooltipText = 'ttt';
+
         return (
             <div>
-                
+                {/* Visibility */}
                 <div className='row'>
                     <div className='col-sm-12'>
                         <div className={btnGroup}>
@@ -117,8 +157,8 @@ class StockChart extends React.Component {
                         </div>
                     </div>
                 </div>
-
-                {/* Visibility */}
+                
+                {/* Chart */}
                 <div className='row'>
                     <div className='col-sm-12 col-lg-10 offset-lg-1'>
                     <ResponsiveContainer width='100%' height={600}>
@@ -134,7 +174,8 @@ class StockChart extends React.Component {
                                 domain={['auto', 'auto']} 
                                 allowDecimals={false}
                                 interval={0}
-                                tick={<CustomizedYAxisTick />}
+                                // tick={<CustomizedYAxisTick />}
+                                tickSize={15}
                             />
                             <Tooltip formatter={(value) => '$' + value} />
                             <Legend verticalAlign='top' verticalAlign='top'/>
@@ -142,41 +183,213 @@ class StockChart extends React.Component {
                             <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.5} stroke="#427eb9" strokeWidth={3}/>
                             <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.5} stroke="#67798a" strokeWidth={3}/>
                             <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.75} stroke="#21a672" strokeWidth={3}/>
-                            <Line dataKey={this.state.showClose ? "close" : null} connectNulls type="monotone" stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showClose ? "close" : null}  stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
                         </LineChart>
                     </ResponsiveContainer>
                     </div>
                 </div>
+
+                {/* Minitable */}
+                <div className='row'>
+                    <div className='col-sm-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2'>
+                        <table className={tableClass}>
+                            <thead>
+                                <tr className={headerClass}>
+                                    <td>Symbol</td>
+                                    <td>Date</td>
+                                    { this.state.showVol && <td>Volume</td>}
+                                    { this.state.showOpen && <td>Open</td>}
+                                    <td>Close</td>
+
+                                    { this.state.showOverallAvg && <td>Estimate<br/><i>(Combined)</i></td> }
+                                    { this.state.showOverallAvg && <td>Accuracy<br/>($)</td> }
+                                    { this.state.showOverallAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showOverallAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+
+                                    { this.state.showLastTd && <td>Estimated<br/>(Previous)</td> }
+                                    { this.state.showLastTd && <td>Accuracy<br/>($)</td> }
+                                    { this.state.showLastTd && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showLastTd && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+
+                                    { this.state.showAvg && <td>Estimated<br/>(50 day)</td> }
+                                    { this.state.showAvg && <td>Accuracy<br/>($)</td> }
+                                    { this.state.showAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+                                    
+                                    { this.state.showDowAvg && <td>Estimated<br/>(DoW)</td> }
+                                    { this.state.showDowAvg && <td>Accuracy<br/>($)</td> }
+                                    { this.state.showDowAvg && this.state.showDailyAcc && <td>Daily<br/>(%)</td> }
+                                    { this.state.showDowAvg && this.state.showWeeklyAcc && <td>Weekly<br/>(%)</td> }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {this.state.tableCandles.map((x, i) => (
+                                    <tr key={x.date} className={(x.futureCandle) ? futureRowClass : ''}>
+                                        <td className={symbolClass}>{x.name}</td>
+                                        <td>{x.dateString} {x.timeString}</td>
+                                        
+                                        {/* Volume */}
+                                        { this.state.showVol && <td>{x.volume}</td>}
+                                        
+                                        {/* Open/close price */}
+                                        { this.state.showOpen && <td>{x.open ? '$' + x.open : ''}</td>}
+                                        <td className={closePriceClass}><b>{x.close ? '$' + x.close : ''}</b></td>
+
+                                        {/* Overall Average */}
+                                        { this.state.showOverallAvg &&
+                                            <td className={estimateOverallAvg}>
+                                                <div className={tooltip}>
+                                                    <b>${x.estCloseOverallAverage}</b>
+                                                    <span className={tooltipText} dangerouslySetInnerHTML={{__html: x.estCloseOverallAverageDetails}}></span>
+                                                </div>
+                                            </td> 
+                                        }
+                                        { this.state.showOverallAvg &&
+                                            <td className={x.estCloseOverallAverageClassName}>{x.estCloseOverallAverageAccuracy}</td>
+                                        }
+                                        { this.state.showOverallAvg && this.state.showDailyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseOverallAverageAccuracyDaily}
+                                                    <span className={tooltipText}>{x.estCloseOverallAverageAccuracyDailyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+                                        { this.state.showOverallAvg && this.state.showWeeklyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseOverallAverageAccuracyWeekly}
+                                                    <span className={tooltipText}>{x.estCloseOverallAverageAccuracyWeeklyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+
+                                        {/* Last trading day */}
+                                        { this.state.showLastTd &&
+                                            <td className={estimateLast}>
+                                                <div className={tooltip}>
+                                                    <b>${x.estCloseLastTd}</b>
+                                                    <span className={tooltipText} dangerouslySetInnerHTML={{__html: x.estCloseLastTdDetails}}></span>
+                                                </div>
+                                            </td> 
+                                        }
+                                        { this.state.showLastTd &&
+                                            <td className={x.estCloseLastTdClassName}>{x.estCloseLastTdAccuracy}
+                                            </td>
+                                        }                                        
+                                        { this.state.showLastTd && this.state.showDailyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseLastTdAccuracyDaily}
+                                                    <span className={tooltipText}>{x.estCloseLastTdAccuracyDailyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+                                        { this.state.showLastTd && this.state.showWeeklyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseLastTdAccuracyWeekly}
+                                                    <span className={tooltipText}>{x.estCloseLastTdAccuracyWeeklyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+
+                                        {/* Averages - last ten trading days */}
+                                        { this.state.showAvg &&
+                                            <td className={estimateAvg}>
+                                                <div className={tooltip}>
+                                                    <b>${x.estCloseAverage}</b>
+                                                    <span className={tooltipText} dangerouslySetInnerHTML={{__html: x.estCloseAverageDetails}}></span>
+                                                </div>
+                                            </td> 
+                                        }
+                                        { this.state.showAvg &&
+                                            <td className={x.estCloseAverageClassName}>{x.estCloseAverageAccuracy}</td>
+                                        }                                        
+                                        { this.state.showAvg && this.state.showDailyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseAverageAccuracyDaily}
+                                                    <span className={tooltipText}>{x.estCloseAverageAccuracyDailyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+                                        { this.state.showAvg && this.state.showWeeklyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseAverageAccuracyWeekly}
+                                                    <span className={tooltipText}>{x.estCloseAverageAccuracyWeeklyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+
+
+                                        {/* Averages - day of week */}
+                                        { this.state.showDowAvg &&
+                                            <td className={estimateDowAvg}>
+                                                <div className={tooltip}>
+                                                    <b>${x.estCloseDowAverage}</b>
+                                                    <span className={tooltipText} dangerouslySetInnerHTML={{__html: x.estCloseDowAverageDetails}}></span>
+                                                </div>
+                                            </td> 
+                                        }
+                                        { this.state.showDowAvg &&
+                                            <td className={x.estCloseDowAverageClassName}>{x.estCloseDowAverageAccuracy}</td>
+                                        }                                        
+                                        { this.state.showDowAvg && this.state.showDailyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseDowAverageAccuracyDaily}
+                                                    <span className={tooltipText}>{x.estCloseDowAverageAccuracyDailyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+                                        { this.state.showDowAvg && this.state.showWeeklyAcc && 
+                                            <td>
+                                                <div className={tooltip}>
+                                                    {x.estCloseDowAverageAccuracyWeekly}
+                                                    <span className={tooltipText}>{x.estCloseDowAverageAccuracyWeeklyNarrow}</span>
+                                                </div>
+                                            </td>
+                                        }
+
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
             );
         }
 }
 
+
+
 // Return a dot for the current 5-minute time and the next, if the line has a value
 class CustomizedDot extends PureComponent {
     render() {
         const {cx, cy, stroke, payload, value} = this.props;
-        
+            
         // No charted value - return nothing
-        if (cy === null) return(<svg></svg>);
+        if (!cy) return(<svg></svg>);
 
-        // Lazy compare - color the current X-tick, and color future X-ticks 
-        let axisTime = moment(payload.timeString, 'HH:mm');
-        let now = moment();
-        let next = moment().add(5, 'minutes');
-        let last = moment().subtract(5, 'minutes');
+        // Get current time
+        let axisDate = new Date(payload.dateString + '/' + new Date().getFullYear() + ' ' + payload.timeString);
 
-        if (axisTime.hour() >= 1 && axisTime.hour() <= 4) axisTime.add(12, 'hours');
-        if (axisTime.isAfter(last) && axisTime.isBefore(now)) {
-            return (<circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#08a" />)
+        const isCurrentTick = axisDate >= last && axisDate <= now && stroke === '#000';
+        const isNextTick = axisDate >= now && axisDate <= next;
+
+        if (isCurrentTick) {
+            return (<svg><circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#08a" /></svg>)
         }
-        else if (axisTime.isAfter(now) && axisTime.isBefore(next)) {            
-            return (<circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#c04" />)
+        else if (isNextTick) {
+            return (<svg><circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#c04" /></svg>)
         }
         else {
             return(<svg></svg>)
         }
-
     }
 }
 
@@ -189,23 +402,23 @@ class CustomizedXAxisTick extends PureComponent {
     let fillColor = '#999';
     let myStyle = {};
     
-    // Lazy compare - color the current X-tick, and color future X-ticks 
-    let axisTime = moment(payload.value, 'HH:mm');
-    let now = moment();
-    let next = moment().add(5, 'minutes');
-    let last = moment().subtract(5, 'minutes');
+    // Get current time
+    let axisDate = new Date(new Date().getMonth()+1 + '/' + new Date().getDate() + '/' + new Date().getFullYear() + ' ' + payload.value);
 
-    if (axisTime.hour() >= 1 && axisTime.hour() <= 4) axisTime.add(12, 'hours');
-    if (axisTime.isAfter(last) && axisTime.isBefore(now)) {
+    // IsCurrentTick: Only place a dot for the closing chart
+    const isCurrentTick = axisDate >= last && axisDate <= now;
+    const isNextTick = axisDate >= now && axisDate <= next;
+
+    if (isCurrentTick) {
         fillColor = '#08a';
         myStyle = {'fontWeight': 'bold'};
     }
-    else if (axisTime.isAfter(now) && axisTime.isBefore(next)) {
+    else if (isNextTick) {
         fillColor = '#f0a';
         myStyle = {'fontWeight': 'bold'};
     }
-    else if (axisTime.isAfter(now)) {        
-        fillColor = '#c04';
+    else {
+        fillColor = '#888';
     }
     
     return (
@@ -222,8 +435,7 @@ class CustomizedYAxisTick extends PureComponent {
             x, y, stroke, payload,
         } = this.props;
 
-        console.log(payload.value);
-
+        //console.log(payload.value);
         return (
             <g transform={`translate(${x},${y})`}>
                 <text textAnchor="end" fill="#666">${payload.value}</text>
