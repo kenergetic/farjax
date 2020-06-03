@@ -179,10 +179,10 @@ class StockChart extends React.Component {
                             />
                             <Tooltip formatter={(value) => '$' + value} />
                             <Legend verticalAlign='top' verticalAlign='top'/>
-                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.5} stroke="#00a0a1" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.5} stroke="#427eb9" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.5} stroke="#67798a" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.75} stroke="#21a672" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.6} stroke="#d00090" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.9} stroke="#0090d0" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.6} stroke="#d09000" strokeWidth={3}/>
+                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.9} stroke="#00d040" strokeWidth={3}/>
                             <Line type="monotone" dataKey={this.state.showClose ? "close" : null}  stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
                         </LineChart>
                     </ResponsiveContainer>
