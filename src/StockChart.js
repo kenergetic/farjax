@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import {
-    ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    ReferenceLine, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import moment from 'moment-timezone';
 import {populateEstimates, getCurrentTradingDate} from './CandleComparer';
@@ -35,6 +35,10 @@ class StockChart extends React.Component {
             showLastTd: false,
             showAvg: true,
             showDowAvg: false,
+
+            // Chart: Draw two lines for the nearest 5 minute (and next 5) that the time is under
+            referenceTime: '09:35',
+            referenceTimeNext: '09:40',
             
             // Table visibility
             showOpen: false,
@@ -62,6 +66,7 @@ class StockChart extends React.Component {
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
 
+        // Get the times for chart calculations
         now = new Date();
         next = new Date();
         last  = new Date();
@@ -73,6 +78,11 @@ class StockChart extends React.Component {
         let candles = [];
         let chartCandles = [];
         let tableCandles = [];
+
+        var coeff = 1000 * 60 * 5;
+        var roundedDate = new Date(Math.round(now.getTime() / coeff) * coeff);
+        let referenceTime = moment(roundedDate).format('hh:mm');
+        let referenceTimeNext = moment(roundedDate).add(5, 'minutes').format('hh:mm');
 
         // Chart range
         let currentTradingDay = getCurrentTradingDate();
@@ -115,7 +125,10 @@ class StockChart extends React.Component {
             candles: candles,
             displayedCandles: chartCandles,
             tableCandles: tableCandles,
-            data: data
+            data: data,
+
+            referenceTime: referenceTime,
+            referenceTimeNext: referenceTimeNext
         });
         
     }
@@ -171,10 +184,10 @@ class StockChart extends React.Component {
                                 }}
                             >
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50}/>
+                                <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50} />
                                 <YAxis yAxisId="left" type="number" 
-                                    domain={['auto', 'auto']} 
-                                    allowDecimals={false}
+                                    domain={[dataMin => (Math.floor(dataMin)), dataMax => (Math.ceil(dataMax))]} 
+                                    //allowDecimals={false}
                                     interval={0}
                                     tick={<CustomizedYAxisTick />}
                                 />
@@ -183,15 +196,19 @@ class StockChart extends React.Component {
                                 <Tooltip formatter={(value) => '$' + value} />
                                 {/* <Tooltip content={<CustomTooltip />} /> */}
                                 <Legend verticalAlign='top' verticalAlign='top'/>
-                                
-                                <Bar yAxisId="right" type="monotone" dataKey="volume" fill="#00aa11" />
+
+                                <ReferenceLine x={this.state.referenceTime} stroke="#00f" yAxisId="left" />
+                                <ReferenceLine x={this.state.referenceTimeNext} stroke="#f08" yAxisId="left" />
 
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.6} stroke="#cccc88" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.9} stroke="#8888cc" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.6} stroke="#88cc88" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.9} stroke="#88eedd" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showClose ? "close" : null}  stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
-
+                              
+                                <Bar yAxisId="right" type="monotone" dataKey="volume" fill="#00aa11" />
+  
+                                
                             </ComposedChart>
                         </ResponsiveContainer>
                     </div>
