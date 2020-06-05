@@ -40,7 +40,7 @@ async function fetchStock(currentTradingDay) {
                         low: x.low.toFixed(2),
                         close: x.close.toFixed(2),
                         nextClose: 0,
-                        volume: (x.volume / 1000000).toFixed(1) + 'M',
+                        volume: x.volume,
                         
                         // Parts of the date in string format, to reduce complex comparisons
                         dateString: dt.format('M/DD'),
@@ -97,7 +97,7 @@ function populateCurrentTradingDate(candles, currentTradingDay) {
                 high: null,
                 low: null,
                 close: null,
-                volume: '-',
+                volume: 0,
                 futureCandle: true,
                 
                 // Parts of the date in string format, to reduce complex comparisons

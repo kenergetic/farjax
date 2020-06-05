@@ -253,7 +253,7 @@ class Stock extends React.Component {
                                         <td>{x.dateString} {x.timeString}</td>
                                         
                                         {/* Volume */}
-                                        { this.state.showVol && <td>{x.volume}</td>}
+                                        { this.state.showVol && <td>{(x.volume / 1000000).toFixed(1)}M</td>}
                                         
                                         {/* Open/close price */}
                                         { this.state.showOpen && <td>{x.open ? '$' + x.open : ''}</td>}

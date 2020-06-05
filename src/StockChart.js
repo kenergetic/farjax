@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import moment from 'moment-timezone';
 import {populateEstimates, getCurrentTradingDate} from './CandleComparer';
@@ -50,7 +50,7 @@ class StockChart extends React.Component {
         await this.pullStockData();
         
         // Refresh every minute
-        this.intervalID = setInterval(this.pullStockData.bind(this), 60000);
+        this.intervalID = setInterval(this.pullStockData.bind(this), 120000);
     }
 
     // Stop the interval from continuing to run
@@ -65,8 +65,10 @@ class StockChart extends React.Component {
         now = new Date();
         next = new Date();
         last  = new Date();
-        next.setMinutes(now.getMinutes() + 5);
-        last.setMinutes(now.getMinutes() - 5);
+        next.setMinutes(now.getMinutes() + 5)
+        next.setSeconds(0);
+        last.setMinutes(now.getMinutes() - 5)
+        last.setSeconds(0);
 
         let candles = [];
         let chartCandles = [];
@@ -78,7 +80,7 @@ class StockChart extends React.Component {
         let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
 
         // ShortTable range
-        let tableFrom = moment().subtract(5, 'minutes');
+        let tableFrom = moment().subtract(10, 'minutes');
         let tableTo = moment().add(5, 'minutes');
 
         // * Debug: Day backtracking *
@@ -99,9 +101,8 @@ class StockChart extends React.Component {
             return 1;
         });
 
-        chartCandles = candles.filter(x => x.date.isSameOrAfter(daysBack) && x.date.isSameOrBefore(forecastRange));
-
-        tableCandles = candles.filter(x => x.date.isSameOrAfter(tableFrom) && x.date.isSameOrBefore(tableTo));
+        chartCandles = candles.filter(x => x.date.isAfter(daysBack) && x.date.isSameOrBefore(forecastRange));
+        tableCandles = candles.filter(x => x.date.isAfter(tableFrom) && x.date.isSameOrBefore(tableTo));
 
         // TODO: Massage data
         let data = chartCandles.sort((a, b) => {
@@ -109,6 +110,7 @@ class StockChart extends React.Component {
             return -1;
         });
         
+
         this.setState({
             candles: candles,
             displayedCandles: chartCandles,
@@ -161,33 +163,40 @@ class StockChart extends React.Component {
                 {/* Chart */}
                 <div className='row'>
                     <div className='col-sm-12 col-lg-10 offset-lg-1'>
-                    <ResponsiveContainer width='100%' height={600}>
-                        <LineChart
-                            data={this.state.data}
-                            margin={{
-                            top: 5, right: 30, left: 20, bottom: 5,
-                            }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50}/>
-                            <YAxis type="number" 
-                                domain={['auto', 'auto']} 
-                                allowDecimals={false}
-                                interval={0}
-                                // tick={<CustomizedYAxisTick />}
-                                tickSize={15}
-                            />
-                            <Tooltip formatter={(value) => '$' + value} />
-                            <Legend verticalAlign='top' verticalAlign='top'/>
-                            <Line type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.6} stroke="#cccc88" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.9} stroke="#8888cc" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.6} stroke="#88cc88" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.9} stroke="#88eedd" strokeWidth={3}/>
-                            <Line type="monotone" dataKey={this.state.showClose ? "close" : null}  stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
-                        </LineChart>
-                    </ResponsiveContainer>
+                        <ResponsiveContainer width='100%' height={500}>
+                            <ComposedChart
+                                data={this.state.data}
+                                margin={{
+                                top: 5, right: 30, left: 20, bottom: 5,
+                                }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50}/>
+                                <YAxis yAxisId="left" type="number" 
+                                    domain={['auto', 'auto']} 
+                                    allowDecimals={false}
+                                    interval={0}
+                                    tick={<CustomizedYAxisTick />}
+                                />
+                                <YAxis yAxisId="right" orientation="right" type="number" domain={[0, dataMax => (Math.ceil(dataMax * 2 / 1000000) * 1000000)]} />
+
+                                <Tooltip formatter={(value) => '$' + value} />
+                                {/* <Tooltip content={<CustomTooltip />} /> */}
+                                <Legend verticalAlign='top' verticalAlign='top'/>
+                                
+                                <Bar yAxisId="right" type="monotone" dataKey="volume" fill="#00aa11" />
+
+                                <Line yAxisId="left" type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.6} stroke="#cccc88" strokeWidth={3}/>
+                                <Line yAxisId="left" type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.9} stroke="#8888cc" strokeWidth={3}/>
+                                <Line yAxisId="left" type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.6} stroke="#88cc88" strokeWidth={3}/>
+                                <Line yAxisId="left" type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.9} stroke="#88eedd" strokeWidth={3}/>
+                                <Line yAxisId="left" type="monotone" dataKey={this.state.showClose ? "close" : null}  stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
+
+                            </ComposedChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
+
 
                 {/* Minitable */}
                 <div className='row'>
@@ -229,7 +238,7 @@ class StockChart extends React.Component {
                                         <td>{x.dateString} {x.timeString}</td>
                                         
                                         {/* Volume */}
-                                        { this.state.showVol && <td>{x.volume}</td>}
+                                        { this.state.showVol && <td>{(x.volume / 1000000).toFixed(1)}M</td>}
                                         
                                         {/* Open/close price */}
                                         { this.state.showOpen && <td>{x.open ? '$' + x.open : ''}</td>}
@@ -359,7 +368,6 @@ class StockChart extends React.Component {
                         </table>
                     </div>
                 </div>
-
             </div>
             );
         }
@@ -367,16 +375,20 @@ class StockChart extends React.Component {
 
 
 
-// Return a dot for the current 5-minute time and the next, if the line has a value
+// Only place a dot for the current 5-minute time and the next, if the line has a value
 class CustomizedDot extends PureComponent {
     render() {
         const {cx, cy, stroke, payload, value} = this.props;
             
-        // No charted value - return nothing
+        // Don't draw a dot with no y
         if (!cy) return(<svg></svg>);
 
         // Get current time
         let axisDate = new Date(payload.dateString + '/' + new Date().getFullYear() + ' ' + payload.timeString);
+        if (axisDate.getHours() <= 4) axisDate.setHours(axisDate.getHours() + 12); // AM to PM
+
+        // Don't draw a dot if this is before the last tick
+        if (axisDate <= last) return(<svg></svg>);
 
         const isCurrentTick = axisDate >= last && axisDate <= now && stroke === '#000';
         const isNextTick = axisDate >= now && axisDate <= next;
@@ -393,6 +405,7 @@ class CustomizedDot extends PureComponent {
     }
 }
 
+
 class CustomizedXAxisTick extends PureComponent {
     render() {
     const {
@@ -404,21 +417,25 @@ class CustomizedXAxisTick extends PureComponent {
     
     // Get current time
     let axisDate = new Date(new Date().getMonth()+1 + '/' + new Date().getDate() + '/' + new Date().getFullYear() + ' ' + payload.value);
+    if (axisDate.getHours() <= 4) axisDate.setHours(axisDate.getHours() + 12); // PM to AM
 
-    // IsCurrentTick: Only place a dot for the closing chart
-    const isCurrentTick = axisDate >= last && axisDate <= now;
-    const isNextTick = axisDate >= now && axisDate <= next;
+    // Don't highlight if this is before the last tick
+    if (axisDate >= last) {
+        // IsCurrentTick: Only place a dot for the closing chart
+        const isCurrentTick = axisDate >= last && axisDate <= now;
+        const isNextTick = axisDate >= now && axisDate <= next;
 
-    if (isCurrentTick) {
-        fillColor = '#08a';
-        myStyle = {'fontWeight': 'bold'};
-    }
-    else if (isNextTick) {
-        fillColor = '#f0a';
-        myStyle = {'fontWeight': 'bold'};
-    }
-    else {
-        fillColor = '#888';
+        if (isCurrentTick) {
+            fillColor = '#08a';
+            myStyle = {'fontWeight': 'bold'};
+        }
+        else if (isNextTick) {
+            fillColor = '#f0a';
+            myStyle = {'fontWeight': 'bold'};
+        }
+        else {
+            fillColor = '#888';
+        }
     }
     
     return (
