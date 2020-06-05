@@ -80,9 +80,10 @@ class StockChart extends React.Component {
         let tableCandles = [];
 
         var coeff = 1000 * 60 * 5;
-        var roundedDate = new Date(Math.round(now.getTime() / coeff) * coeff);
-        let referenceTime = moment(roundedDate).subtract(5, 'minutes').format('hh:mm');
-        let referenceTimeNext = moment(roundedDate).format('hh:mm');
+        var roundedDate = new Date(Math.floor(now.getTime() / coeff) * coeff);
+
+        let referenceTime = moment(roundedDate).format('hh:mm');
+        let referenceTimeNext = moment(roundedDate).add(5, 'minutes').format('hh:mm');
 
         // Chart range
         let currentTradingDay = getCurrentTradingDate();
