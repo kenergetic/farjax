@@ -58,8 +58,8 @@ class StockChart extends React.Component {
         await this.pullStockData();
         
         // Refresh every minute
-        this.intervalID = setInterval(this.pullStockData.bind(this), 5000);
-        //this.intervalID = setInterval(this.pullStockData.bind(this), 120000);
+        //this.intervalID = setInterval(this.pullStockData.bind(this), 5000);
+        this.intervalID = setInterval(this.pullStockData.bind(this), 60000);
     }
 
     // Stop the interval from continuing to run
