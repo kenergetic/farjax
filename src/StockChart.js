@@ -7,11 +7,14 @@ import {populateEstimates, getCurrentTradingDate} from './CandleComparer';
 import {populateAccuracy} from './CandleAccuracy';
 import {fetchStock} from './CandleApi';
 
-// Track current times
-let now = new Date();
-let next = new Date(new Date() + 300000);
-let last  = new Date(new Date() - 300000);
+// Use EDT
+moment.tz.setDefault('America/New_York');
 
+// Track current times
+let now = null;
+let next = null;
+let last  = null;
+        
 
 class StockChart extends React.Component {
 
@@ -23,6 +26,7 @@ class StockChart extends React.Component {
             displayedCandles: [],
             tableCandles: [],
             data: [],
+            pastTradingDays: 0,
             
             // How many days back of candles to show
             days: 1,
@@ -54,7 +58,8 @@ class StockChart extends React.Component {
         await this.pullStockData();
         
         // Refresh every minute
-        this.intervalID = setInterval(this.pullStockData.bind(this), 120000);
+        this.intervalID = setInterval(this.pullStockData.bind(this), 5000);
+        //this.intervalID = setInterval(this.pullStockData.bind(this), 120000);
     }
 
     // Stop the interval from continuing to run
@@ -66,27 +71,30 @@ class StockChart extends React.Component {
     // Get candle data from the API, and apply estimates and accuracy to it
     async pullStockData() {
 
+        moment.tz.setDefault('America/New_York');
+        
         // Get the times for chart calculations
-        now = new Date();
-        next = new Date();
-        last  = new Date();
-        next.setMinutes(now.getMinutes() + 5)
-        next.setSeconds(0);
-        last.setMinutes(now.getMinutes() - 5)
-        last.setSeconds(0);
-
+        // * js date compares faster than moment         
+        now = new Date(moment().format('MM/DD/YYYY HH:mm'));
+        next = new Date(moment().add(5, 'minutes').format('MM/DD/YYYY HH:mm'));
+        last = new Date(moment().subtract(5, 'minutes').format('MM/DD/YYYY HH:mm'));
+        
         let candles = [];
         let chartCandles = [];
         let tableCandles = [];
 
         var coeff = 1000 * 60 * 5;
         var roundedDate = new Date(Math.floor(now.getTime() / coeff) * coeff);
+        
+        console.log( moment(roundedDate).format('hh:mm zz'));
 
-        let referenceTime = moment(roundedDate).format('hh:mm');
-        let referenceTimeNext = moment(roundedDate).add(5, 'minutes').format('hh:mm');
+        let referenceTime = '09:35';
+        let referenceTimeNext = '09:35';
+        //moment(roundedDate).add(5, 'minutes').format('hh:mm');
 
         // Chart range
         let currentTradingDay = getCurrentTradingDate();
+        
         let daysBack = moment(getCurrentTradingDate().subtract(this.state.days, 'days'));
         let forecastRange = moment().add(this.state.minutesAhead, 'minutes');
 
@@ -112,15 +120,27 @@ class StockChart extends React.Component {
             return 1;
         });
 
-        chartCandles = candles.filter(x => x.date.isAfter(daysBack) && x.date.isSameOrBefore(forecastRange));
+        chartCandles = candles.filter(x => x.date.tz('America/New_York').isAfter(daysBack) && x.date.isSameOrBefore(forecastRange));
         tableCandles = candles.filter(x => x.date.isAfter(tableFrom) && x.date.isSameOrBefore(tableTo));
 
-        // TODO: Massage data
+
+        // Sort chart candles
         let data = chartCandles.sort((a, b) => {
             if (a.date.isSameOrAfter(b.date)) return 1;
             return -1;
         });
-        
+
+        // Set the reference lines to wherever the first close value is null
+        for(var i=0; i<chartCandles.length; i++) {
+            if (!chartCandles[i].close) {
+                referenceTimeNext = chartCandles[i].timeString;
+                if (i > 0) referenceTime = chartCandles[i - 1].timeString;
+                break;
+            }
+        }
+
+        // Candle data - approximately how many trading days of past data did we get
+        let pastTradingDays = Math.ceil(candles.length / 78);
 
         this.setState({
             candles: candles,
@@ -129,7 +149,8 @@ class StockChart extends React.Component {
             data: data,
 
             referenceTime: referenceTime,
-            referenceTimeNext: referenceTimeNext
+            referenceTimeNext: referenceTimeNext,
+            pastTradingDays: pastTradingDays
         });
         
     }
@@ -163,7 +184,10 @@ class StockChart extends React.Component {
             <div>
                 {/* Visibility */}
                 <div className='row'>
-                    <div className='col-sm-12'>
+                    <div className='col-sm-12 col-lg-4 offset-lg-1'>
+                        <b>Historical data: {this.state.pastTradingDays} days</b>
+                    </div>
+                    <div className='col-sm-12 col-lg-6'>
                         <div className={btnGroup}>
                             <button className={this.state.showClose ? btnSuccess : btnSecondary } onClick={() => this.setState({ showClose: !this.state.showClose })}>Close</button>
                             <button className={this.state.showOverallAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOverallAvg: !this.state.showOverallAvg })}>Overall Avg</button>
@@ -436,6 +460,9 @@ class CustomizedXAxisTick extends PureComponent {
     // Get current time
     let axisDate = new Date(new Date().getMonth()+1 + '/' + new Date().getDate() + '/' + new Date().getFullYear() + ' ' + payload.value);
     if (axisDate.getHours() <= 4) axisDate.setHours(axisDate.getHours() + 12); // PM to AM
+
+    // console.log(last);
+    // console.log(axisDate);
 
     // Don't highlight if this is before the last tick
     if (axisDate >= last) {

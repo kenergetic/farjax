@@ -16,6 +16,7 @@ class Stock extends React.Component {
         this.state = { 
             candles: [],
             displayedCandles: [],
+            pastTradingDays: 0,
             
             // How many days back of candles to show
             days: 3,
@@ -38,7 +39,7 @@ class Stock extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
          
         // Use EDT
-        moment.tz.setDefault('American/New York');
+        moment.tz.setDefault('America/New_York');
     }
 
     async componentDidMount() {
@@ -94,9 +95,13 @@ class Stock extends React.Component {
 
         displayedCandles = candles.filter(x => x.date.isAfter(daysBack) && x.date.isBefore(forecastRange));
 
+        // Candle data - approximately how many trading days of past data did we get
+        let pastTradingDays = Math.ceil(candles.length / 78);
+
         this.setState({
             candles: candles,
-            displayedCandles: displayedCandles
+            displayedCandles: displayedCandles,
+            pastTradingDays: pastTradingDays
         });
     }
 
@@ -198,6 +203,8 @@ class Stock extends React.Component {
                 {/* Visibility */}
                 <div className='row'>
                     <div className={colClass}>
+                        
+                        <b>Historical data: {this.state.pastTradingDays} days</b>
                         <div className={btnGroup}>
                             <button className={this.state.showOverallAvg ? btnSuccess : btnSecondary } onClick={() => this.setState({ showOverallAvg: !this.state.showOverallAvg })}>Overall Avg</button>
                             <button className={this.state.showLastTd ? btnSuccess : btnSecondary } onClick={() => this.setState({ showLastTd: !this.state.showLastTd })}>Last TD</button>

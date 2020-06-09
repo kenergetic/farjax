@@ -23,7 +23,7 @@ async function fetchStock(currentTradingDay) {
 
     let candles = [];
     // Use EDT
-    moment.tz.setDefault('American/New York');
+    moment.tz.setDefault('America/New_York');
 
     // Get data from the API
     await fetch(process.env.REACT_APP_API_URL + 'stocks/get/spy')

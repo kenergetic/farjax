@@ -1,6 +1,6 @@
 import moment from 'moment-timezone';
+moment.tz.setDefault('America/New_York');
 
-moment.tz.setDefault('American/New York');
 // ----------------------------
 // Takes an array of 5-minute candles from a stock and applies
 // various estimation strategies to each candle
