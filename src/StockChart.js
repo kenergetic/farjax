@@ -433,7 +433,7 @@ class CustomizedDot extends PureComponent {
         if (axisDate <= last) return(<svg></svg>);
 
         const isCurrentTick = axisDate >= last && axisDate <= now && stroke === '#000';
-        const isNextTick = axisDate >= now && axisDate <= next;
+        const isNextTick = axisDate > now && axisDate <= next;
 
         if (isCurrentTick) {
             return (<svg><circle cx={cx} cy={cy} r="5" stroke="black" strokeWidth="1" fill="#08a" /></svg>)
