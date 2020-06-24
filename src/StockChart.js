@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import {
-    ReferenceLine, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    ReferenceLine, ComposedChart, Line, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import moment from 'moment-timezone';
 import {populateEstimates, getCurrentTradingDate} from './CandleComparer';
@@ -210,13 +210,14 @@ class StockChart extends React.Component {
                             >
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50} />
+                                <YAxis yAxisId="right" orientation="right" type="number" domain={[0, dataMax => (Math.ceil(dataMax * 3 / 1000000) * 1000000)]}
+                                    tick={<CustomizedY2AxisTick/>} />
                                 <YAxis yAxisId="left" type="number" 
                                     domain={[dataMin => (Math.floor(dataMin - 3)), dataMax => (Math.ceil(dataMax))]} 
                                     //allowDecimals={false}
                                     interval={0}
                                     tick={<CustomizedYAxisTick />}
                                 />
-                                <YAxis yAxisId="right" orientation="right" type="number" domain={[0, dataMax => (Math.ceil(dataMax * 2 / 1000000) * 1000000)]} />
 
                                 <Tooltip formatter={(value) => '$' + value} />
                                 {/* <Tooltip content={<CustomTooltip />} /> */}
@@ -225,13 +226,18 @@ class StockChart extends React.Component {
                                 <ReferenceLine x={this.state.referenceTime} stroke="#00f" yAxisId="left" />
                                 <ReferenceLine x={this.state.referenceTimeNext} stroke="#f08" yAxisId="left" />
 
+                                <Bar yAxisId="right" type="monotone" dataKey="volume" fill="#00aa11" opacity="50%">
+                                    {/* TODO: Some way to recolor on up/down { data.map((entry, index) => {
+                                      <Cell fill={entry.volume > 0 ? '#00aa11' : '#aa0000' }/>  
+                                    })} */}
+                                </Bar>
+
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showLastTd ? "estCloseLastTd" : null} dot={<CustomizedDot/>}  opacity={0.6} stroke="#cccc88" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showAvg ? "estCloseAverage" : null} dot={<CustomizedDot/>}  opacity={0.9} stroke="#8888cc" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showDowAvg ? "estCloseDowAverage" : null} dot={<CustomizedDot/>} opacity={0.6} stroke="#88cc88" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showOverallAvg ? "estCloseOverallAverage" : null} dot={<CustomizedDot/>} opacity={0.9} stroke="#88eedd" strokeWidth={3}/>
                                 <Line yAxisId="left" type="monotone" dataKey={this.state.showClose ? "close" : null}  stroke="#000" dot={<CustomizedDot/>} activeDot={{ r: 8 }} strokeWidth={3}/>
                               
-                                <Bar yAxisId="right" type="monotone" dataKey="volume" fill="#00aa11" />
   
                                 
                             </ComposedChart>
@@ -501,6 +507,20 @@ class CustomizedYAxisTick extends PureComponent {
         return (
             <g transform={`translate(${x},${y})`}>
                 <text textAnchor="end" fill="#666">${payload.value}</text>
+            </g>
+        );
+    }
+}
+
+class CustomizedY2AxisTick extends PureComponent {
+    render() {
+        const {
+            x, y, stroke, payload,
+        } = this.props;
+
+        return (
+            <g transform={`translate(${x},${y})`}>
+                <text  fill="#666">${payload.value/1000000}M</text>
             </g>
         );
     }
