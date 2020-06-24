@@ -211,7 +211,7 @@ class StockChart extends React.Component {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="timeString" tick={<CustomizedXAxisTick />} interval={0} height={50} />
                                 <YAxis yAxisId="left" type="number" 
-                                    domain={[dataMin => (Math.floor(dataMin)), dataMax => (Math.ceil(dataMax))]} 
+                                    domain={[dataMin => (Math.floor(dataMin - 3)), dataMax => (Math.ceil(dataMax))]} 
                                     //allowDecimals={false}
                                     interval={0}
                                     tick={<CustomizedYAxisTick />}
@@ -468,7 +468,7 @@ class CustomizedXAxisTick extends PureComponent {
     if (axisDate >= last) {
         // IsCurrentTick: Only place a dot for the closing chart
         const isCurrentTick = axisDate >= last && axisDate <= now;
-        const isNextTick = axisDate >= now && axisDate <= next;
+        const isNextTick = axisDate > now && axisDate <= next;
 
         if (isCurrentTick) {
             fillColor = '#08a';
