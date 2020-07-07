@@ -211,13 +211,23 @@ function estimateCandlePrice(candles, candle, index, maxCandles, dayOfWeekOnly) 
     // Average the priceDifference between each paired candle
     for(let i=0; i<records; i++) {      
         
-        let before = (!isOpeningCandle) ? historicPairedCandles[i].close : historicCandles[i].open;
-        let after = historicCandles[i].close;
+        // Small fix for missing data / holidays / early market closes
+        // * Just use 
+        if (historicPairedCandles[i]) {
+            let before = (!isOpeningCandle) ? historicPairedCandles[i].close : historicCandles[i].open;
+            let after = historicCandles[i].close;
+    
+            let priceDifference = parseFloat((before - after) * -1).toFixed(2);
+            averagePriceDifference += parseFloat(priceDifference);
+    
+            details += `${historicCandles[i].dateString}: ${before} -> ${after} = ${priceDifference}<br/>`;
+        }
+        else {
+            historicPairedCandles[i] = historicCandles[i];
+            historicPairedCandles[i].timeString = 'n/a';
+            details += `n/a<br/>`;
+        }
 
-        let priceDifference = parseFloat((before - after) * -1).toFixed(2);
-        averagePriceDifference += parseFloat(priceDifference);
-
-        details += `${historicCandles[i].dateString}: ${before} -> ${after} = ${priceDifference}<br/>`;
     }
 
     // Return data
